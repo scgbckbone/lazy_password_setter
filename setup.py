@@ -13,7 +13,7 @@ setuptools.setup(
     version='0.0.1',
     url="https://github.com/scgbckbone/lazy_password_setter",
     description='Resetting password on remote hosts via ssh.',
-    license="BSD",
+    license="MIT",
     long_description=read_('README'),
     author='Andrej Virgovic',
     author_email='virgovica@gmail.com',
@@ -21,7 +21,7 @@ setuptools.setup(
     classifiers=[
         'Programming Language :: Python :: 2.7',
         'Development Status :: 3 - Alpha',
-        'License :: OSI Approved :: BSD License'
+        'License :: OSI Approved :: MIT License'
     ],
     packages=[
         'lazy_password_setter',
