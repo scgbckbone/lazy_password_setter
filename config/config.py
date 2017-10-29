@@ -1,3 +1,6 @@
+import os
+
+
 username = None
 
 password = None
@@ -11,17 +14,14 @@ password_len = 20
 connections = {}
 
 
-conn_obj = {
-    'avirgovic@pip1-dev-ba.in.uptime.at:22': '5rFVChuEYp0cpuUjeg20',
-    'avirgovic@pip1-stg-ir.pipelinersales.com:22': 'Punishment0410!@--/w',
-    'pip2-stg-ir.pipelinersales.com': ']5KgYP_sa%/FN_a%',
-    'lic1-stg-ir.pipelinersales.com': 'hR<H}5_Ma[KgWqx!pP"a/K-Xx+eZC+6s',
-    "dkfshjdskhfskjdhf": None
-}
+conn_obj = {}
 
+# using ssh config file
+use_ssh_config = True
+ssh_config_path = None
 
 # ===========================KEEPASS============================================
 
-keepass_db_path = "/home/andrej/Passwords.kdbx"
+keepass_db_path = os.environ.get("kpdb")
 
-keepass_pwd = "%sp$Punishment0410!@--//soFia"
+keepass_pwd = os.environ.get("kppwd")
