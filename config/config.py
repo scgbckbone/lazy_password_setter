@@ -10,8 +10,10 @@ password_len = 20
 
 connections = {}
 
-
-conn_obj = {}
+ssh_host_pwd_map = {}
+ssh_config_keys = ('HostName', 'User', 'Port', 'IdentityFile')
+use_ssh_config = False
+ssh_config_path = None
 
 
 # ===========================KEEPASS============================================

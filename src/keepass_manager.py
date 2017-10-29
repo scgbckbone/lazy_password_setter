@@ -1,5 +1,4 @@
 from pykeepass import PyKeePass
-from config import config
 
 
 class MoreThanOneServersGroupError(Exception):
@@ -50,11 +49,6 @@ class KPManager(object):
         if server_group:
             self.server_group = server_group
         else:
-            if not config.connections:
-                raise RuntimeError(
-                    "Provide values in 'config/config.py'."
-                )
-
             server_group = self.conn.add_group(self.conn.root_group, "servers")
             self.conn.save()
             self.server_group = server_group
@@ -82,9 +76,29 @@ class KPManager(object):
             "url": url
         }
 
-    def add_entry(self):
-        entry = self.parse_and_create_entry_map(
-            ('avirgovic@pip1-dev-ba.in.uptime.at:22', '5rFVChuEYp0cpuUjeg20',)
-        )
+    def add_entry(self, entry):
         self.conn.add_entry(**entry)
         self.conn.save()
+
+    def add_all(self, dict_obj):
+        for entry in dict_obj.iteritems():
+            entry = self.parse_and_create_entry_map(entry)
+            self.add_entry(entry)
+
+    def add_all_ssh(self, host_new_pwd, ssh_config_obj):
+        for host, obj in ssh_config_obj.iteritems():
+            try:
+                host_name = obj["HostName"]
+            except KeyError:
+                host_name = host
+
+            entry = {
+                "destination_group": self.server_group,
+                "title": host,
+                "username": obj["User"],
+                "password": host_new_pwd[host],
+                "url": host_name,
+                "notes": obj["IdentityFile"]
+            }
+            self.add_entry(entry)
+

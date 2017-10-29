@@ -62,7 +62,7 @@ class FabricPasswordUtility(object):
         return [i.split("@")[1].split(":")[0] for i in self.connections.keys()]
 
     def generate_password(self):
-        chars = string.ascii_letters + string.digits + '!@#$%^&*()'
+        chars = string.ascii_letters + string.digits + '!@#$%^&*()-='
         rnd = random.SystemRandom()
         return ''.join(rnd.choice(chars) for _ in range(self.pwd_len))
 
