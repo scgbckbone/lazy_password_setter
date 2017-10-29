@@ -1,6 +1,3 @@
-import os
-
-
 username = None
 
 password = None
@@ -16,12 +13,9 @@ connections = {}
 
 conn_obj = {}
 
-# using ssh config file
-use_ssh_config = True
-ssh_config_path = None
 
 # ===========================KEEPASS============================================
 
-keepass_db_path = os.environ.get("kpdb")
+keepass_db_path = None
 
-keepass_pwd = os.environ.get("kppwd")
+keepass_pwd = None
