@@ -36,9 +36,6 @@ class ConfigParser(object):
                     main[cached_host][key] = value
         return main
 
-    def create_new_host_pwd_map(self, pwd_list):
-        return dict(zip(self.connection_obj.keys(), pwd_list))
-
     def check_integrity(self, host_pwd_map):
         if sorted(self.connection_obj.keys()) != sorted(host_pwd_map.keys()):
             raise IntegrityError(

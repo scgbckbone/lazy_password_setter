@@ -71,7 +71,6 @@ class KPManager(object):
             if find_only:
                 raise NoServerGroupError("No server group.")
             server_group = self.conn.add_group(self.conn.root_group, "servers")
-            # self.conn.save()
             self.server_group = server_group
 
     def testing_configuration(self):
@@ -103,7 +102,6 @@ class KPManager(object):
 
     def add_entry(self, entry):
         self.conn.add_entry(**entry)
-        # self.conn.save()
 
     def add_all(self, dict_obj):
         self.find_or_create_server_group()
@@ -112,32 +110,33 @@ class KPManager(object):
             self.add_entry(entry)
 
     def add_all_ssh(self, host_new_pwd, ssh_config_obj):
+        self.find_or_create_server_group()
         for host, obj in ssh_config_obj.iteritems():
-            try:
-                host_name = obj["HostName"]
-            except KeyError:
-                host_name = host
+            if host in host_new_pwd:
+                try:
+                    host_name = obj["HostName"]
+                except KeyError:
+                    host_name = host
 
-            entry = {
-                "destination_group": self.server_group,
-                "title": host,
-                "username": obj["User"],
-                "password": host_new_pwd[host],
-                "url": host_name,
-                "notes": obj["IdentityFile"]
-            }
-            self.add_entry(entry)
+                entry = {
+                    "destination_group": self.server_group,
+                    "title": host,
+                    "username": obj["User"],
+                    "password": host_new_pwd[host],
+                    "url": host_name,
+                    "notes": obj["IdentityFile"]
+                }
+                self.add_entry(entry)
 
     def delete_group(self, group):
         self.conn.delete_group(group)
-        # self.conn.save()
 
     def delete_server_group(self):
         self.conn.delete_group(self.server_group)
-        # self.conn.save()
 
     def save_changes(self):
         self.conn.save()
+
 
 if __name__ == "__main__":
     from config import config

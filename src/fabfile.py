@@ -1,4 +1,4 @@
-from fabric.api import run, task, env, execute
+from fabric.api import run, task, env, execute, sudo
 from passlib.hash import sha512_crypt
 
 
@@ -15,7 +15,13 @@ def change_pwd(oldpass, newpass):
 @task
 def changepwd(username, pwd_hash):
     cmd = "echo '%s':'%s' | chpasswd -e" % (username, pwd_hash)
-    run(cmd)
+    sudo(cmd)
+
+
+@task
+def usermod_p(username, pwd_hash):
+    cmd = "usermod -p '%s' '%s'" % (pwd_hash, username)
+    sudo(cmd)
 
 
 class PWDChanger(object):
@@ -53,25 +59,19 @@ class PWDChanger(object):
         return done, failed
 
     def change_all_ssh(self):
+        done = {}
+        failed = {}
         for host, pwd in self.actual_pwd_map.iteritems():
-            execute(
-                change_pwd,
-                oldpass=pwd,
-                newpass=self.new_pwd_map[host],
-                host=host
-            )
+            try:
+                execute(
+                    change_pwd,
+                    oldpass=pwd,
+                    newpass=self.new_pwd_map[host],
+                    host=host
+                )
+            except FabricException:
+                failed[host] = pwd
+            else:
+                done[host] = self.new_pwd_map[host]
+        return done, failed
 
-
-#
-# if __name__ == "__main__":
-#     ssh.util.log_to_file("paramiko.log", 10)
-#     env.use_ssh_config = True
-#     env.hosts = ["do"]
-#
-#
-#     execute(
-#         change_pwd,
-#         oldpass="Punishment0410!@--/",
-#         newpass="andrej123!@#",
-#         host="do"
-#     )

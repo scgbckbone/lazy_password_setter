@@ -29,11 +29,15 @@ def notifier(func):
 
 
 def main():
-    if not config.connections and config.first_run:
-        print("Empty connections. Please specify it in config/config.py")
-        return
+    if config.first_run:
+        if not config.connections and not config.use_ssh_config:
+            print("Empty connections. Please specify it in config/config.py")
+            return
+        if not config.ssh_host_pwd_map and config.use_ssh_config:
+            print("Empty pwd host map. Please specify it in config/config.py")
+            return
     if config.use_ssh_config and not config.ssh_config_path:
-        print("Provide path to your ssh config file.")
+        print("Provide path to your ssh config file in config/config.py.")
         return
     if config.use_ssh_config:
         env.use_ssh_config = True
@@ -46,26 +50,26 @@ def main():
     if config.first_run:
         keepass.first_run_check()
         fpu = FabricPasswordUtility(
-            config.connections,
+            config.ssh_host_pwd_map if config.use_ssh_config else config.connections,
             username=config.username,
             password=config.password,
             port=config.port,
-            pwd_len=config.password_len
+            pwd_len=config.password_len,
+            ssh=config.use_ssh_config
         )
         new_passwords = fpu.new_connection_map()
 
         if config.use_ssh_config:
-            new_host_pwd_map = ssh_config.create_new_host_pwd_map(
-                new_passwords.values()
-            )
             pwd_changer = PWDChanger(
                 actual_pwd_map=config.ssh_host_pwd_map,
-                new_pwd_map=new_host_pwd_map,
+                new_pwd_map=new_passwords,
                 host_list=ssh_config.connection_obj.keys()
             )
-            pwd_changer.change_all_ssh()
+            success, failure = notifier(pwd_changer.change_all_ssh)
+            success.update(failure)
 
-            keepass.add_all_ssh(new_host_pwd_map, ssh_config.connection_obj)
+            keepass.add_all_ssh(new_passwords, ssh_config.connection_obj)
+            keepass.save_changes()
         else:
             pwd_changer = PWDChanger(
                 actual_pwd_map=fpu.connections,
@@ -80,12 +84,28 @@ def main():
 
     else:
         # not first run - working with keepass
+        keepass.find_or_create_server_group(find_only=True)
+        connection_obj = keepass.build_connection_map_from_entries()
         if config.use_ssh_config:
-            pass
+
+            fpu = FabricPasswordUtility(
+                connection_obj, pwd_len=config.password_len,
+                ssh=config.use_ssh_config
+            )
+            new_passwords = fpu.new_connection_map()
+            pwd_changer = PWDChanger(
+                actual_pwd_map=fpu.connections,
+                new_pwd_map=new_passwords,
+                host_list=fpu.get_env_hosts_for_fabric()
+            )
+            success, failure = notifier(pwd_changer.change_all_ssh)
+            keepass.delete_server_group()
+            success.update(failure)
+            keepass.add_all_ssh()
+            # TODO finish this
+
         else:
             # check that input are in the kp
-            keepass.find_or_create_server_group(find_only=True)
-            connection_obj = keepass.build_connection_map_from_entries()
             fpu = FabricPasswordUtility(
                 connection_obj, pwd_len=config.password_len
             )

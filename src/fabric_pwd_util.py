@@ -16,16 +16,18 @@ class MoreThanOneServersGroupError(Exception):
 
 class FabricPasswordUtility(object):
     def __init__(self, connection_obj, username=None, port="22",
-                 password=None, pwd_len=20):
+                 password=None, pwd_len=20, ssh=False):
 
         self.usr = username
         self.pwd = password
         self.connection_obj = connection_obj
         self.port = port
-        self.connections = self.check_and_correct_connections()
+        self.connections = self.check_and_correct_connections(ssh)
         self.pwd_len = pwd_len
 
-    def check_and_correct_connections(self):
+    def check_and_correct_connections(self, ssh):
+        if ssh:
+            return self.connection_obj
         checked_conn_map = {}
         for key, value in self.connection_obj.iteritems():
             if "@" not in key and not self.usr:
