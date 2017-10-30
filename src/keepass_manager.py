@@ -5,13 +5,24 @@ class MoreThanOneServersGroupError(Exception):
     """if there is more than one servers group outside recycle bin in KP"""
 
 
+class NoServerGroupError(Exception):
+    """No server group was found to get data."""
+
+
+class ServersGroupPresentError(Exception):
+    """If first run, there should be no active server folders."""
+
+
 class KPManager(object):
-    def __init__(self, kp_db_path, password):
+    def __init__(self, kp_db_path, password, testing=False):
         self.kp_db_path = kp_db_path
         self.password = password
         self.conn = self.init_connection()
         self.server_group = None
         self.rubbish = self.find_recycle_bin()
+        self.testing = testing
+        if self.testing:
+            self.test_group = self.testing_configuration()
 
     def init_connection(self):
         try:
@@ -27,7 +38,13 @@ class KPManager(object):
         rubbish = self.conn.find_groups_by_name("Recycle Bin", first=True)
         return rubbish
 
-    def filter_trashed_server_groups(self, server_groups):
+    def first_run_check(self):
+        server_group = self.filter_trashed_server_groups(
+            self.conn.find_groups_by_name("servers"),
+            first_run=True
+        )
+
+    def filter_trashed_server_groups(self, server_groups, first_run=False):
         server_groups_new = []
         for server_group in server_groups:
             if server_group.parentgroup.uuid == self.rubbish.uuid:
@@ -35,6 +52,8 @@ class KPManager(object):
             server_groups_new.append(server_group)
 
         if len(server_groups_new) == 1:
+            if first_run:
+                raise ServersGroupPresentError("Delete old servers group")
             return server_groups_new[0]
         if len(server_groups_new) == 0:
             return None
@@ -42,16 +61,22 @@ class KPManager(object):
             "More than one 'servers' group in KP. Delete old groups."
         )
 
-    def find_or_create_server_group(self):
+    def find_or_create_server_group(self, find_only=False):
         server_group = self.filter_trashed_server_groups(
             self.conn.find_groups_by_name("servers")
         )
         if server_group:
             self.server_group = server_group
         else:
+            if find_only:
+                raise NoServerGroupError("No server group.")
             server_group = self.conn.add_group(self.conn.root_group, "servers")
-            self.conn.save()
+            # self.conn.save()
             self.server_group = server_group
+
+    def testing_configuration(self):
+        test_group = self.conn.add_group(self.conn.root_group, "test")
+        return test_group
 
     def get_data_from_servers_group(self):
         conns = []
@@ -69,7 +94,7 @@ class KPManager(object):
         usr, url_port = key.split("@")
         url, port = url_port.split(":")
         return {
-            "destination_group": self.server_group,
+            "destination_group": self.test_group if self.testing else self.server_group,
             "title": url.split(".")[0],
             "username": usr,
             "password": pwd,
@@ -78,9 +103,10 @@ class KPManager(object):
 
     def add_entry(self, entry):
         self.conn.add_entry(**entry)
-        self.conn.save()
+        # self.conn.save()
 
     def add_all(self, dict_obj):
+        self.find_or_create_server_group()
         for entry in dict_obj.iteritems():
             entry = self.parse_and_create_entry_map(entry)
             self.add_entry(entry)
@@ -102,3 +128,28 @@ class KPManager(object):
             }
             self.add_entry(entry)
 
+    def delete_group(self, group):
+        self.conn.delete_group(group)
+        # self.conn.save()
+
+    def delete_server_group(self):
+        self.conn.delete_group(self.server_group)
+        # self.conn.save()
+
+    def save_changes(self):
+        self.conn.save()
+
+if __name__ == "__main__":
+    from config import config
+    connections = {
+        'avirgovic@lic1-stg-ir.pipelinersales.com:22': 'IqIQSgg5aUZEPv82%z87e8RHY',
+        'avirgovic@pip1-dev-ba.in.uptime.at:22': 'fJNiDJZd6VXQo!iyj5%BRMh37',
+        'avirgovic@pip1-stg-ir.pipelinersales.com:22': 'G*hK42^t*Q(CjZmMx0firycou',
+        'avirgovic@pip2-stg-ir.pipelinersales.com:22': 'jHA^f)TkR96uE*W9Y4Ja^)8yJ'
+    }
+    kp = KPManager(config.keepass_db_path, config.keepass_pwd, testing=True)
+
+    kp.add_all(connections)
+    kp.save_changes()
+
+    kp.delete_group(kp.test_group)
