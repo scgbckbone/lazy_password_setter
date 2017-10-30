@@ -33,6 +33,7 @@ setuptools.setup(
     ],
     install_requires=[
         'pykeepass',
-        'fabric'
+        'fabric',
+        'passlib'
     ],
 )
