@@ -17,15 +17,28 @@ env.abort_exception = FabricException
 
 
 def notifier(func):
+    success_msg = "Successfully changed passwords [host: new password]:\n"
+    failure_msg = "\nFailed to change passwords [host: new password]:"
+    pwd_log = open(log_path + os.sep + 'secret.txt', 'w')
+    try:
         success, failure = func()
-        print("Successfully changed passwords [host: new password]:")
+        print(success_msg)
+        pwd_log.write(success_msg)
         pprint.pprint(success)
-        print("\nFailed to change passwords [host: new password]:")
+        pprint.pprint(success, stream=pwd_log)
+        print(failure_msg)
         pprint.pprint(failure)
+        pwd_log.write(failure_msg)
+        pprint.pprint(failure, stream=pwd_log)
         print("\nSaving to KeePass...")
         print("Failed passwords will be saved in their original form.")
         print("Changed passwords will be saved in their new form.")
         return success, failure
+    except Exception as e:
+        pass
+    finally:
+        pwd_log.close()
+
 
 
 def main():
@@ -68,7 +81,7 @@ def main():
             success, failure = notifier(pwd_changer.change_all_ssh)
             success.update(failure)
 
-            keepass.add_all_ssh(new_passwords, ssh_config.connection_obj)
+            keepass.add_all_ssh(success, ssh_config.connection_obj)
             keepass.save_changes()
         else:
             pwd_changer = PWDChanger(
@@ -83,7 +96,6 @@ def main():
             keepass.save_changes()
 
     else:
-        # not first run - working with keepass
         keepass.find_or_create_server_group(find_only=True)
         connection_obj = keepass.build_connection_map_from_entries()
         if config.use_ssh_config:
@@ -93,16 +105,22 @@ def main():
                 ssh=config.use_ssh_config
             )
             new_passwords = fpu.new_connection_map()
+            new_passwords = dict(zip(
+                ssh_config.connection_obj.keys(), new_passwords.values()
+            ))
+            host_actual_pwd = dict(zip(
+                ssh_config.connection_obj.keys(), fpu.connection_obj.values()
+            ))
             pwd_changer = PWDChanger(
-                actual_pwd_map=fpu.connections,
+                actual_pwd_map=host_actual_pwd,
                 new_pwd_map=new_passwords,
-                host_list=fpu.get_env_hosts_for_fabric()
+                host_list=ssh_config.connection_obj.keys()
             )
             success, failure = notifier(pwd_changer.change_all_ssh)
             keepass.delete_server_group()
             success.update(failure)
-            keepass.add_all_ssh()
-            # TODO finish this
+            keepass.add_all_ssh(success, ssh_config.connection_obj)
+            keepass.save_changes()
 
         else:
             # check that input are in the kp
