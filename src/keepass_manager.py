@@ -77,16 +77,19 @@ class KPManager(object):
         test_group = self.conn.add_group(self.conn.root_group, "test")
         return test_group
 
-    def get_data_from_servers_group(self):
+    def get_data_from_servers_group(self, ssh_conf):
         conns = []
         for i in self.server_group.entries:
-            conns.append(
-                (i.username + "@" + i.url + ":" + "22", str(i.password))
-            )
+            if ssh_conf:
+                # TODO what if does not have title?
+                key_val = i.title, str(i.password)
+            else:
+                key_val = (i.username + "@" + i.url + ":" + "22", str(i.password))
+            conns.append(key_val)
         return conns
 
-    def build_connection_map_from_entries(self):
-        return dict(self.get_data_from_servers_group())
+    def build_connection_map_from_entries(self, ssh_conf=False):
+        return dict(self.get_data_from_servers_group(ssh_conf))
 
     def parse_and_create_entry_map(self, key_val_pair):
         key, pwd = key_val_pair

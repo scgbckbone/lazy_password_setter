@@ -7,6 +7,7 @@ from keepass_manager import KPManager
 from fabfile import PWDChanger, FabricException
 from config import config
 from config_parser import ConfigParser
+from log_facility import get_me_logger
 
 
 here = os.path.abspath(__file__)
@@ -15,10 +16,16 @@ log_path = os.sep.join(here_lst[:-2]) + os.sep + "log"
 
 env.abort_exception = FabricException
 
+logger = get_me_logger(
+    'base_logger',
+    log_path + os.sep + 'base.log',
+    stream=True
+)
+
 
 def notifier(func):
     success_msg = "Successfully changed passwords [host: new password]:\n"
-    failure_msg = "\nFailed to change passwords [host: new password]:"
+    failure_msg = "\nFailed to change passwords [host: new password]:\n"
     pwd_log = open(log_path + os.sep + 'secret.txt', 'w')
     try:
         success, failure = func()
@@ -38,7 +45,6 @@ def notifier(func):
         pass
     finally:
         pwd_log.close()
-
 
 
 def main():
@@ -97,22 +103,17 @@ def main():
 
     else:
         keepass.find_or_create_server_group(find_only=True)
-        connection_obj = keepass.build_connection_map_from_entries()
         if config.use_ssh_config:
-
+            connection_obj = keepass.build_connection_map_from_entries(
+                ssh_conf=True
+            )
             fpu = FabricPasswordUtility(
                 connection_obj, pwd_len=config.password_len,
                 ssh=config.use_ssh_config
             )
             new_passwords = fpu.new_connection_map()
-            new_passwords = dict(zip(
-                ssh_config.connection_obj.keys(), new_passwords.values()
-            ))
-            host_actual_pwd = dict(zip(
-                ssh_config.connection_obj.keys(), fpu.connection_obj.values()
-            ))
             pwd_changer = PWDChanger(
-                actual_pwd_map=host_actual_pwd,
+                actual_pwd_map=fpu.connections,
                 new_pwd_map=new_passwords,
                 host_list=ssh_config.connection_obj.keys()
             )
@@ -123,6 +124,7 @@ def main():
             keepass.save_changes()
 
         else:
+            connection_obj = keepass.build_connection_map_from_entries()
             # check that input are in the kp
             fpu = FabricPasswordUtility(
                 connection_obj, pwd_len=config.password_len
@@ -146,4 +148,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except UnicodeDecodeError as e:
+        logger.error(e.args)
+        print("Save your database file before processing.")
+    except Exception as e:
+        logger.error(e.args)
+    finally:
+        print("BYE")
