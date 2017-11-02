@@ -7,21 +7,33 @@ class FabricException(Exception):
 
 
 @task
-def change_pwd(oldpass, newpass):
+def change_pwd_echo(oldpass, newpass):
     cmd = "echo -e '%s\\n%s\\n%s' | passwd" % (oldpass, newpass, newpass)
     run(cmd)
 
 
 @task
-def changepwd(username, pwd_hash):
+def change_pwd_echo_chpasswd(username, pwd_hash):
     cmd = "echo '%s':'%s' | chpasswd -e" % (username, pwd_hash)
     sudo(cmd)
 
 
 @task
-def usermod_p(username, pwd_hash):
+def change_pwd_usermod_p(username, pwd_hash):
     cmd = "usermod -p '%s' '%s'" % (pwd_hash, username)
     sudo(cmd)
+
+
+@task
+def change_pwd_here_string(oldpass, newpass):
+    cmd = "passwd <<< '%s'$'\n''%s'$'\n''%s'" % (oldpass, newpass, newpass)
+    run(cmd)
+
+
+@task
+def change_pwd_printf(oldpass, newpass):
+    cmd = "printf '%s\n%s\n%s' | passwd" % (oldpass, newpass, newpass)
+    run(cmd)
 
 
 class PWDChanger(object):
@@ -48,7 +60,7 @@ class PWDChanger(object):
             env.password = pwd
             try:
                 execute(
-                    change_pwd,
+                    change_pwd_here_string,
                     oldpass=pwd,
                     newpass=self.new_pwd_map[host],
                 )
