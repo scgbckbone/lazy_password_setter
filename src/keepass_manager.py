@@ -149,9 +149,24 @@ if __name__ == "__main__":
         'avirgovic@pip1-stg-ir.pipelinersales.com:22': 'G*hK42^t*Q(CjZmMx0firycou',
         'avirgovic@pip2-stg-ir.pipelinersales.com:22': 'jHA^f)TkR96uE*W9Y4Ja^)8yJ'
     }
-    kp = KPManager(config.keepass_db_path, config.keepass_pwd, testing=True)
-
-    kp.add_all(connections)
-    kp.save_changes()
-
-    kp.delete_group(kp.test_group)
+    kp = KPManager(config.keepass_db_path, config.keepass_pwd)
+    x = kp.conn.find_entries_by_title("aaa")[0]
+    y = x.password
+    print y
+    def escape_single_quotes(pwd):
+        res = pwd.split("'")
+        if len(res) == 1:
+            return False, pwd
+        if res[0] is '' and res[-1] is '':
+            escaped = "'\\''".join(res)[1:-1]
+        elif res[0] is '' and res[-1] is not '':
+            escaped = "'\\''".join(res)[1:] + "'"
+        elif res[-1] is '' and res[0] is not '':
+            escaped = "'" + "'\\''".join(res)[:-1]
+        else:
+            escaped = "'" + "'\\''".join(res) + "'"
+        return True, escaped
+    y = escape_single_quotes(y)
+    print y
+    cmd = "passwd <<< %s$'\\n''%s'$'\\n''%s'" % (y, "andrej", "andrej123")
+    print cmd

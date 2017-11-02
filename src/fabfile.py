@@ -25,8 +25,11 @@ def change_pwd_usermod_p(username, pwd_hash):
 
 
 @task
-def change_pwd_here_string(oldpass, newpass):
-    cmd = "passwd <<< '%s'$'\n''%s'$'\n''%s'" % (oldpass, newpass, newpass)
+def change_pwd_here_string(oldpass, newpass, escaped=False):
+    if escaped:
+        cmd = "passwd <<< %s$'\n''%s'$'\n''%s'" % (oldpass, newpass, newpass)
+    else:
+        cmd = "passwd <<< '%s'$'\n''%s'$'\n''%s'" % (oldpass, newpass, newpass)
     run(cmd)
 
 
@@ -51,6 +54,21 @@ class PWDChanger(object):
     def get_username_from_host(host_str):
         username, rest = host_str.split("@")
         return username
+
+    @staticmethod
+    def escape_single_quotes(pwd):
+        res = pwd.split("'")
+        if len(res) == 1:
+            return False, pwd
+        if res[0] is '' and res[-1] is '':
+            escaped = "'\\''".join(res)[1:-1]
+        elif res[0] is '' and res[-1] is not '':
+            escaped = "'\\''".join(res)[1:] + "'"
+        elif res[-1] is '' and res[0] is not '':
+            escaped = "'" + "'\\''".join(res)[:-1]
+        else:
+            escaped = "'" + "'\\''".join(res) + "'"
+        return True, escaped
 
     def change_all(self):
         done = {}
