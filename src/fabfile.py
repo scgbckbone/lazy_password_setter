@@ -76,7 +76,7 @@ class PWDChanger(object):
         for host, pwd in self.actual_pwd_map.iteritems():
             try:
                 execute(
-                    change_pwd,
+                    change_pwd_here_string,
                     oldpass=pwd,
                     newpass=self.new_pwd_map[host],
                     host=host
