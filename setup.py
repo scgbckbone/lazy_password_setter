@@ -34,6 +34,11 @@ setuptools.setup(
     install_requires=[
         'pykeepass',
         'fabric',
-        'passlib'
+        'passlib',
+        'click'
     ],
+    entry_points='''
+        [console_scripts]
+        changepwds=cli:change_pwds
+    '''
 )

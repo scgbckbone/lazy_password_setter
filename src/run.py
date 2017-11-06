@@ -5,7 +5,7 @@ from fabric.network import ssh
 from fabric_pwd_util import FabricPasswordUtility
 from keepass_manager import KPManager
 from fabfile import PWDChanger, FabricException
-from config import config
+from config import config as config_f
 from config_parser import ConfigParser
 from log_facility import get_me_logger
 
@@ -21,6 +21,22 @@ logger = get_me_logger(
     log_path + os.sep + 'base.log',
     stream=True
 )
+
+
+def handle_exceptions(func, *args, **kwargs):
+    try:
+        func(*args, **kwargs)
+    except UnicodeDecodeError as e:
+        logger.error(e.args)
+        print("Save your database file before processing.")
+    except (AssertionError, IOError) as e:
+        logger.error(e.args)
+        print("Database file path not provided or incorrect.")
+    except Exception as e:
+        logger.error(e.args)
+        print(e.args)
+    finally:
+        print("BYE")
 
 
 def notifier(func):
@@ -47,7 +63,7 @@ def notifier(func):
         pwd_log.close()
 
 
-def main():
+def main(config):
     if config.first_run:
         if not config.connections and not config.use_ssh_config:
             print("Empty connections. Please specify it in config/config.py")
@@ -148,16 +164,5 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except UnicodeDecodeError as e:
-        logger.error(e.args)
-        print("Save your database file before processing.")
-    except (AssertionError, IOError) as e:
-        logger.error(e.args)
-        print("Database file path not provided or incorrect.")
-    except Exception as e:
-        logger.error(e.args)
-        print(e.args)
-    finally:
-        print("BYE")
+    handle_exceptions(main, config_f)
+
