@@ -153,9 +153,9 @@ if __name__ == "__main__":
     except UnicodeDecodeError as e:
         logger.error(e.args)
         print("Save your database file before processing.")
-    except AssertionError as e:
+    except (AssertionError, IOError) as e:
         logger.error(e.args)
-        print("Database file path not provided.")
+        print("Database file path not provided or incorrect.")
     except Exception as e:
         logger.error(e.args)
         print(e.args)

@@ -1,5 +1,6 @@
 from fabric.api import run, task, env, execute, sudo
 from passlib.hash import sha512_crypt
+from pipes import quote
 
 
 class FabricException(Exception):
@@ -26,10 +27,7 @@ def change_pwd_usermod_p(username, pwd_hash):
 
 @task
 def change_pwd_here_string(oldpass, newpass, escaped=False):
-    if escaped:
-        cmd = "passwd <<< %s$'\n''%s'$'\n''%s'" % (oldpass, newpass, newpass)
-    else:
-        cmd = "passwd <<< '%s'$'\n''%s'$'\n''%s'" % (oldpass, newpass, newpass)
+    cmd = "passwd <<< %s$'\\n'%s$'\\n'%s" % (oldpass, newpass, newpass)
     run(cmd)
 
 
@@ -56,19 +54,8 @@ class PWDChanger(object):
         return username
 
     @staticmethod
-    def escape_single_quotes(pwd):
-        res = pwd.split("'")
-        if len(res) == 1:
-            return False, pwd
-        if res[0] is '' and res[-1] is '':
-            escaped = "'\\''".join(res)[1:-1]
-        elif res[0] is '' and res[-1] is not '':
-            escaped = "'\\''".join(res)[1:] + "'"
-        elif res[-1] is '' and res[0] is not '':
-            escaped = "'" + "'\\''".join(res)[:-1]
-        else:
-            escaped = "'" + "'\\''".join(res) + "'"
-        return True, escaped
+    def proper_quoting(pwd):
+        return quote(pwd)
 
     def change_all(self):
         done = {}
@@ -79,8 +66,8 @@ class PWDChanger(object):
             try:
                 execute(
                     change_pwd_here_string,
-                    oldpass=pwd,
-                    newpass=self.new_pwd_map[host],
+                    oldpass=self.proper_quoting(pwd),
+                    newpass=self.proper_quoting(self.new_pwd_map[host]),
                 )
             except FabricException:
                 failed[host] = pwd
@@ -95,8 +82,8 @@ class PWDChanger(object):
             try:
                 execute(
                     change_pwd_here_string,
-                    oldpass=pwd,
-                    newpass=self.new_pwd_map[host],
+                    oldpass=self.proper_quoting(pwd),
+                    newpass=self.proper_quoting(self.new_pwd_map[host]),
                     host=host
                 )
             except FabricException:
@@ -104,4 +91,3 @@ class PWDChanger(object):
             else:
                 done[host] = self.new_pwd_map[host]
         return done, failed
-
