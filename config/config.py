@@ -15,9 +15,6 @@ ssh_config_keys = ('HostName', 'User', 'Port', 'IdentityFile')
 use_ssh_config = False
 ssh_config_path = None
 
-
-# ===========================KEEPASS============================================
-
 keepass_db_path = None
 
 keepass_pwd = None
