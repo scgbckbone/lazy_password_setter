@@ -1,1 +1,3 @@
-recursive-include lazy_password_setter *.gitignore *.txt *.py
+recursive-include *.gitignore *.txt *.py
+include requirements.txt
+include README.md
