@@ -24,12 +24,11 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License'
     ],
     packages=[
-        'lazy_password_setter',
-        'lazy_password_setter/config',
-        'lazy_password_setter/docs',
-        'lazy_password_setter/log',
-        'lazy_password_setter/src',
-        'lazy_password_setter/tests',
+        'config',
+        'docs',
+        'log',
+        'src',
+        'tests',
     ],
     install_requires=[
         'pykeepass',
