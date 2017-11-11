@@ -77,17 +77,14 @@ def change_pwds(config):
         click.echo(e)
         logger.critical("%s" % e)
     else:
+        for i in dir(config_f):
+            if not i.startswith("__"):
+                try:
+                    user_config.__dict__[i]
+                except KeyError:
+                    user_config.__dict__[i] = config_f.__dict__[i]
         handle_exceptions(main, user_config)
 
 
 if __name__ == "__main__":
-    # change_pwds()
-    user_config = imp.load_source('config', "/home/andrej/my_config.py")
-    for i in dir(config_f):
-        if not i.startswith("__"):
-            try:
-                user_config.__dict__[i]
-            except KeyError:
-                user_config.__dict__[i] = config_f.__dict__[i]
-
-    print dir(user_config)
+    change_pwds()

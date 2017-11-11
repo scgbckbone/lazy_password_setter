@@ -6,7 +6,7 @@ first_run = True
 
 port = "22"
 
-password_len = 25
+password_len = 50
 
 connections = {}
 

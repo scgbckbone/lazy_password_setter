@@ -34,7 +34,9 @@ setuptools.setup(
         'pykeepass',
         'fabric',
         'passlib',
-        'click'
+        'click',
+        'tox',
+        'pytest'
     ],
     entry_points='''
         [console_scripts]

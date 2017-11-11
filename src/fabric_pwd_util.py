@@ -2,6 +2,10 @@ import random
 import string
 
 
+class NoHostError(Exception):
+    """If, no host is specified whn using ssh option."""
+
+
 class NoUserNameError(Exception):
     """If no username is provided in both connections map and username param."""
 
@@ -28,6 +32,14 @@ class FabricPasswordUtility(object):
 
     def check_and_correct_connections(self):
         if self.ssh:
+            for host, pwd in self.connection_obj.items():
+                if not host:
+                    raise NoHostError("Specify host names.")
+                if not pwd:
+                    raise NoPasswordError(
+                        "Provide password, or adjust your connection object."
+                        "Connection object value: password"
+                    )
             return self.connection_obj
         checked_conn_map = {}
         for key, value in self.connection_obj.iteritems():
