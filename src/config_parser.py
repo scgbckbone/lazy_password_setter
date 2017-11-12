@@ -36,11 +36,5 @@ class ConfigParser(object):
                     main[cached_host][key] = value
         return main
 
-    def check_integrity(self, host_pwd_map):
-        if sorted(self.connection_obj.keys()) != sorted(host_pwd_map.keys()):
-            raise IntegrityError(
-                "Hosts from ssh config do not match hosts from ssh_host_pwd_map"
-            )
-
 
 
