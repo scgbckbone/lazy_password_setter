@@ -83,3 +83,71 @@ keepass_db_path = None
 # password for '.kdbx' database file
 keepass_pwd = None
 ```
+
+# Examples
+
+I'm running this for a first time and do not want to use my ssh config file.
+  * I do not have same username and password for each remote host
+  * I do not have any folder in my keepass with name 'servers'
+  * I only use port 22
+  * i want generated passwords to be 50 characters long
+  * my '.kdbx' file is in /home/peter/Passwords.kdbx
+  
+here is my config file that I have in /home/peter/my_conf.py:
+  
+```python
+first_run = True
+password_len = 50
+port = "22"
+connections = {
+    "username@host_name": "my_current_password1",
+    "user@host1_name": "my_current_password2",
+    "name@host2_name": "my_current_password3",
+    "username@host3_name": "my_current_password4",
+}
+keepass_db_path = "/home/peter/Passwords.kdbx"
+keepass_pwd = "secret_keepass_password"
+```
+and run it:
+```bash
+changepwds -c /home/peter/my_conf.py
+
+or 
+
+changepwds --config=/home/peter/my_conf.py
+```
+
+If I'm running for a first time, yet want to use my ssh config file.
+(with all four above mentioned conditions)
+  * my ssh config file is in /home/peter/.ssh/config
+
+config file:
+
+```python
+first_run = True
+password_len = 50
+port = "22"
+# keys have to match to your HOST from ssh config file
+# config will be read whole, but only host specified in 'ssh_host_pwd_map
+# will be subjected to change
+ssh_host_pwd_map = {
+    "host_name": "my_current_password1",
+    "host1_name": "my_current_password2",
+    "host2_name": "my_current_password3",
+    "host3_name": "my_current_password4",
+}
+use_ssh_config = True
+ssh_config_path = "/home/peter/.ssh/config"
+keepass_db_path = "/home/peter/Passwords.kdbx"
+keepass_pwd = "secret_keepass_password"
+```
+
+and run.
+
+If you already have data in KeePass only thing that you need to set is:
+  * I decided that 50 characters is too much. 25 is enough.
+  
+```python
+first_run = False
+password_len = 25
+```
