@@ -4,6 +4,10 @@
 
 ###### For now, only KeePass password manager is supported.
 
+#### Implementation details:
+  * this package is wrapped around fabric that is wrapped around paramiko
+  * passwords are changed via here string so [no worries about process table](https://stackoverflow.com/questions/47042953/how-dangerous-is-to-echo-passwords-via-pipe-to-passwd)
+
 ###### Installation:
 ```
 git clone https://github.com/scgbckbone/lazy_password_setter.git
