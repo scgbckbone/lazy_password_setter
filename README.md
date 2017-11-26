@@ -154,4 +154,6 @@ If you already have data in KeePass only thing that you need to set is:
 ```python
 first_run = False
 password_len = 25
+keepass_db_path = "/home/peter/Passwords.kdbx"
+keepass_pwd = "secret_keepass_password"
 ```

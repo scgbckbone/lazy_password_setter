@@ -58,7 +58,7 @@ def notifier(func):
         print("Changed passwords will be saved in their new form.")
         return success, failure
     except Exception as e:
-        pass
+        logger.error("Fail in notifier.", exc_info=True)
     finally:
         pwd_log.close()
 
@@ -109,7 +109,8 @@ def main(config):
             pwd_changer = PWDChanger(
                 actual_pwd_map=fpu.connections,
                 new_pwd_map=new_passwords,
-                host_list=fpu.get_env_hosts_for_fabric()
+                host_list=fpu.get_env_hosts_for_fabric(),
+                ssh_config=ssh_config.connection_obj,
             )
             success, failure = notifier(pwd_changer.change_all)
 
